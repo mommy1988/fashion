@@ -2,27 +2,83 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
+    <!-- Cấu hình chống mờ, chống zoom tự động và tối ưu vùng an toàn của tai thỏ/thanh điều hướng trên iPhone -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Phối Đồ Cá Nhân trên Web</title>
-    <!-- Đổi sang đường link thư viện dự phòng mượt hơn cho điện thoại -->
     <script src="https://jsdelivr.net"></script>
     <style>
         * { box-sizing: border-box; }
-        body { margin: 0; padding: 0; font-family: sans-serif; background: #f2f2f7; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        #canvas-container { flex: 1; background: #ffffff; position: relative; width: 100%; display: flex; justify-content: center; align-items: center; }
-        canvas { border: 1px solid #e5e5ea; background: #fafafa; }
-        .controls { padding: 16px; background: #ffffff; border-top: 1px solid #d1d1d6; display: flex; gap: 12px; justify-content: center; }
-        .btn { height: 48px; padding: 0 20px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        
+        body { 
+            margin: 0; 
+            padding: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+            background: #f2f2f7; 
+            display: flex; 
+            flex-direction: column; 
+            /* Sửa lỗi dùng 100dvh để tự co giãn tránh bị thanh Safari đè lên */
+            height: 100vh;
+            height: 100dvh; 
+            overflow: hidden; 
+        }
+
+        #canvas-container { 
+            flex: 1; 
+            background: #ffffff; 
+            position: relative; 
+            width: 100%; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            overflow: hidden;
+        }
+
+        canvas { 
+            border: 1px solid #e5e5ea; 
+            background: #fafafa; 
+        }
+
+        /* Tối ưu thanh điều khiển: Đẩy khoảng cách an toàn lên trên thanh điều hướng của iPhone Pro Max */
+        .controls { 
+            padding: 16px; 
+            /* env(safe-area-inset-bottom) giúp tự động cộng thêm chiều cao của thanh gạt ngang dưới cùng iPhone */
+            padding-bottom: calc(16px + env(safe-area-inset-bottom)); 
+            background: #ffffff; 
+            border-top: 1px solid #d1d1d6; 
+            display: flex; 
+            gap: 12px; 
+            justify-content: center; 
+            width: 100%;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+
+        .btn { 
+            height: 50px; /* Tăng nhẹ kích thước nút để ngón tay dễ chạm trên màn hình lớn */
+            padding: 0 16px; 
+            border: none; 
+            border-radius: 12px; 
+            font-size: 16px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 6px; 
+        }
+
         .btn-primary { background: #007aff; color: white; flex: 2; }
         .btn-success { background: #34c759; color: white; flex: 1; }
         .btn-danger { background: #ff3b30; color: white; flex: 1; }
+
+        /* Hiệu ứng khi bấm giữ nút trên iPhone */
+        .btn:active { opacity: 0.8; }
     </style>
 </head>
 <body>
 
     <div id="canvas-container">
-        <!-- Đã cố định khung hình vuông để đảm bảo ảnh luôn hiện đúng vị trí -->
-        <canvas id="outfitCanvas" width="380" height="450"></canvas>
+        <!-- Đặt khung phối đồ kích thước cố định vừa vặn chiều rộng màn hình điện thoại -->
+        <canvas id="outfitCanvas" width="360" height="420"></canvas>
     </div>
 
     <div class="controls">
@@ -33,27 +89,26 @@
     </div>
 
     <script>
-        // Khởi tạo bảng ghim
         const canvas = new fabric.Canvas('outfitCanvas');
 
         function handleImageUpload(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function (e) {
-                    // Tạo một đối tượng ảnh thuần của HTML trước để kiểm tra dữ liệu
                     const imgObj = new Image();
                     imgObj.src = e.target.result;
                     imgObj.onload = function () {
                         const fabricImg = new fabric.Image(imgObj);
-                        // Tự động thu nhỏ ảnh lại để tránh bị vỡ hoặc văng ra ngoài khung nhìn
-                        fabricImg.scaleToWidth(150);
+                        // Đặt kích thước ảnh vừa vặn để không bị tràn khung
+                        fabricImg.scaleToWidth(140);
                         fabricImg.set({
-                            left: 100,
-                            top: 150,
+                            left: 110,
+                            top: 140,
                             cornerColor: '#007aff',
-                            cornerSize: 20,
+                            cornerSize: 24, // Nút điều khiển lớn để ngón tay dễ kéo, xoay
                             transparentCorners: false,
-                            hasRotatingPoint: true
+                            hasRotatingPoint: true,
+                            touchCornerSize: 40
                         });
                         canvas.add(fabricImg);
                         canvas.setActiveObject(fabricImg);
